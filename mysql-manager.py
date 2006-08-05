@@ -65,6 +65,12 @@ class MysqlManager:
 		self.xml.get_widget('about_dialog').hide()
 		return True
 
+	def on_host_entry_changed(self,widget):
+		is_localhost = (widget.get_text() == 'localhost')
+		self.xml.get_widget('port_spinbutton').set_sensitive(not is_localhost)
+		if is_localhost:
+			self.xml.get_widget('port_spinbutton').set_value(3306)
+
 	def on_switch_server(self,widget):
 		self.xml.get_widget('main_app').hide()
 		self.xml.get_widget('server_dialog').show()
