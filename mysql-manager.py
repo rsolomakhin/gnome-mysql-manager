@@ -68,6 +68,40 @@ class MysqlManager:
 	def on_switch_server(self,widget):
 		self.xml.get_widget('main_app').hide()
 		self.xml.get_widget('server_dialog').show()
+		self.xml.get_widget('password_entry').set_text('')
+		
+	def on_change_password(self,widget):
+		self.xml.get_widget('change_password_entry1').set_text('')
+		self.xml.get_widget('change_password_entry2').set_text('')
+		self.on_change_password_entry_changed()
+		self.xml.get_widget('main_app').set_sensitive(False)
+		self.xml.get_widget('password_dialog').show()
+
+	def on_change_password_entry_changed(self,widget=None):
+		e1 = self.xml.get_widget('change_password_entry1').get_text()
+		e2 = self.xml.get_widget('change_password_entry2').get_text()
+		same = (e1 == e2) and (e1 != '')
+		self.xml.get_widget('change_password_okbutton').set_sensitive(same)
+
+	def on_change_password_cancel(self,widget,signal=None):
+		self.xml.get_widget('main_app').set_sensitive(True)
+		self.xml.get_widget('password_dialog').hide()
+		return True
+
+	def on_change_password_okbutton(self,widget):
+		p = self.xml.get_widget('change_password_entry1').get_text()
+		try:
+			c = self.db.cursor()
+			c.execute('update mysql.user set password=PASSWORD("'
+					  +p+'") where user="'+self.user+'"')
+			c = self.db.cursor()
+			c.execute('flush privileges')
+		except Error, detail:
+			self.show_error(detail[1])
+		else:
+			self.populate_models()
+			self.xml.get_widget('main_app').set_sensitive(True)
+			self.xml.get_widget('password_dialog').hide()
 
 	def on_add_user(self,widget):
 		print 'adding user...'
@@ -261,6 +295,7 @@ class MysqlManager:
 				'MySQL Manager ('+user_entry+'@'+host_entry
 				+':'+str(port_spin)+')')
 			self.xml.get_widget('main_app').show()
+			self.user = user_entry
 
 if __name__ == '__main__':
 	app = MysqlManager()
