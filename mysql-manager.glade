@@ -655,7 +655,6 @@
 		      <property name="hover_selection">False</property>
 		      <property name="hover_expand">False</property>
 		      <signal name="cursor_changed" handler="on_select_db_row" last_modification_time="Tue, 01 Aug 2006 19:34:30 GMT"/>
-		      <signal name="row_activated" handler="on_edit_db" last_modification_time="Sun, 30 Jul 2006 14:26:43 GMT"/>
 		    </widget>
 		  </child>
 		</widget>
