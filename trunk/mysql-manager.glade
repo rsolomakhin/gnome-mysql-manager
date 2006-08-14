@@ -1005,9 +1005,12 @@
   <property name="border_width">12</property>
   <property name="destroy_with_parent">False</property>
   <property name="name" translatable="yes">MySQL Manager</property>
-  <property name="copyright" translatable="yes">Copyright (c) 2006 Руслан Соломахин</property>
+  <property name="copyright" translatable="yes">Copyright © 2006 Руслан Соломахин</property>
   <property name="comments" translatable="yes">Tool for basic management of MySQL databases.</property>
-  <property name="license" translatable="yes">This program is free software; you can redistribute it and/or
+  <property name="license" translatable="yes">Gnome MySQL Manager – Tool for basic management of MySQL databases.
+Copyright© 2006 Руслан Соломахин (Rouslan Solomakhin)
+
+This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 2
 of the License, or (at your option) any later version.
@@ -1024,7 +1027,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
   <property name="wrap_license">False</property>
   <property name="website">http://rouslan.blogspot.com</property>
   <property name="website_label" translatable="yes">Author's Blog</property>
-  <property name="authors">Руслан Соломахин &lt;rouslan.solomakhin@gmail.com&gt;</property>
+  <property name="authors">Руслан Соломахин (Rouslan Solomakhin) &lt;rouslan.solomakhin@gmail.com&gt;</property>
   <property name="translator_credits" translatable="yes" comments="TRANSLATORS: Replace this string with your names, one name per line.">translator-credits</property>
   <signal name="delete_event" handler="on_about_delete" last_modification_time="Sun, 30 Jul 2006 07:00:00 GMT"/>
 </widget>
@@ -1274,140 +1277,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 	      <property name="padding">0</property>
 	      <property name="expand">False</property>
 	      <property name="fill">False</property>
-	    </packing>
-	  </child>
-	</widget>
-	<packing>
-	  <property name="padding">0</property>
-	  <property name="expand">True</property>
-	  <property name="fill">True</property>
-	</packing>
-      </child>
-    </widget>
-  </child>
-</widget>
-
-<widget class="GtkDialog" id="edit_db_dialog">
-  <property name="border_width">12</property>
-  <property name="title" translatable="yes">Edit Database</property>
-  <property name="type">GTK_WINDOW_TOPLEVEL</property>
-  <property name="window_position">GTK_WIN_POS_NONE</property>
-  <property name="modal">True</property>
-  <property name="resizable">False</property>
-  <property name="destroy_with_parent">False</property>
-  <property name="decorated">True</property>
-  <property name="skip_taskbar_hint">False</property>
-  <property name="skip_pager_hint">False</property>
-  <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
-  <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
-  <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
-  <property name="has_separator">False</property>
-  <signal name="delete_event" handler="on_cancel_edit_db" last_modification_time="Sun, 30 Jul 2006 20:10:01 GMT"/>
-
-  <child internal-child="vbox">
-    <widget class="GtkVBox" id="dialog-vbox4">
-      <property name="visible">True</property>
-      <property name="homogeneous">False</property>
-      <property name="spacing">12</property>
-
-      <child internal-child="action_area">
-	<widget class="GtkHButtonBox" id="dialog-action_area4">
-	  <property name="visible">True</property>
-	  <property name="layout_style">GTK_BUTTONBOX_END</property>
-
-	  <child>
-	    <widget class="GtkButton" id="cancelbutton3">
-	      <property name="visible">True</property>
-	      <property name="can_default">True</property>
-	      <property name="can_focus">True</property>
-	      <property name="label">gtk-cancel</property>
-	      <property name="use_stock">True</property>
-	      <property name="relief">GTK_RELIEF_NORMAL</property>
-	      <property name="focus_on_click">True</property>
-	      <property name="response_id">-6</property>
-	      <signal name="clicked" handler="on_cancel_edit_db" last_modification_time="Sun, 30 Jul 2006 20:10:32 GMT"/>
-	    </widget>
-	  </child>
-
-	  <child>
-	    <widget class="GtkButton" id="edit_db_savebutton">
-	      <property name="visible">True</property>
-	      <property name="can_default">True</property>
-	      <property name="can_focus">True</property>
-	      <property name="label">gtk-save</property>
-	      <property name="use_stock">True</property>
-	      <property name="relief">GTK_RELIEF_NORMAL</property>
-	      <property name="focus_on_click">True</property>
-	      <property name="response_id">-5</property>
-	      <signal name="clicked" handler="on_edit_db_savebutton" last_modification_time="Sun, 30 Jul 2006 20:26:59 GMT"/>
-	    </widget>
-	  </child>
-	</widget>
-	<packing>
-	  <property name="padding">0</property>
-	  <property name="expand">False</property>
-	  <property name="fill">True</property>
-	  <property name="pack_type">GTK_PACK_END</property>
-	</packing>
-      </child>
-
-      <child>
-	<widget class="GtkTable" id="table3">
-	  <property name="visible">True</property>
-	  <property name="n_rows">1</property>
-	  <property name="n_columns">2</property>
-	  <property name="homogeneous">False</property>
-	  <property name="row_spacing">6</property>
-	  <property name="column_spacing">12</property>
-
-	  <child>
-	    <widget class="GtkEntry" id="edit_db_db_entry">
-	      <property name="visible">True</property>
-	      <property name="can_focus">True</property>
-	      <property name="editable">True</property>
-	      <property name="visibility">True</property>
-	      <property name="max_length">0</property>
-	      <property name="text" translatable="yes"></property>
-	      <property name="has_frame">True</property>
-	      <property name="invisible_char">●</property>
-	      <property name="activates_default">False</property>
-	      <signal name="changed" handler="on_edit_db_entry_changed" last_modification_time="Tue, 01 Aug 2006 20:18:36 GMT"/>
-	    </widget>
-	    <packing>
-	      <property name="left_attach">1</property>
-	      <property name="right_attach">2</property>
-	      <property name="top_attach">0</property>
-	      <property name="bottom_attach">1</property>
-	      <property name="y_options"></property>
-	    </packing>
-	  </child>
-
-	  <child>
-	    <widget class="GtkLabel" id="label9">
-	      <property name="visible">True</property>
-	      <property name="label" translatable="yes">Database:</property>
-	      <property name="use_underline">False</property>
-	      <property name="use_markup">False</property>
-	      <property name="justify">GTK_JUSTIFY_LEFT</property>
-	      <property name="wrap">False</property>
-	      <property name="selectable">False</property>
-	      <property name="xalign">0</property>
-	      <property name="yalign">0.5</property>
-	      <property name="xpad">0</property>
-	      <property name="ypad">0</property>
-	      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
-	      <property name="width_chars">-1</property>
-	      <property name="single_line_mode">False</property>
-	      <property name="angle">0</property>
-	    </widget>
-	    <packing>
-	      <property name="left_attach">0</property>
-	      <property name="right_attach">1</property>
-	      <property name="top_attach">0</property>
-	      <property name="bottom_attach">1</property>
-	      <property name="x_options">fill</property>
-	      <property name="y_options"></property>
 	    </packing>
 	  </child>
 	</widget>
@@ -1767,11 +1636,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 	      <property name="tooltip" translatable="yes">Enter the name for the new database.</property>
 	      <property name="can_focus">True</property>
 	      <property name="editable">True</property>
-	      <property name="visibility">True</property>
+	      <property name="visibility">False</property>
 	      <property name="max_length">0</property>
 	      <property name="text" translatable="yes"></property>
 	      <property name="has_frame">True</property>
-	      <property name="invisible_char">●</property>
+	      <property name="invisible_char">*</property>
 	      <property name="activates_default">True</property>
 	    </widget>
 	    <packing>
@@ -1896,11 +1765,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 	      <property name="tooltip" translatable="yes">Enter the name for the new database.</property>
 	      <property name="can_focus">True</property>
 	      <property name="editable">True</property>
-	      <property name="visibility">True</property>
+	      <property name="visibility">False</property>
 	      <property name="max_length">0</property>
 	      <property name="text" translatable="yes"></property>
 	      <property name="has_frame">True</property>
-	      <property name="invisible_char">●</property>
+	      <property name="invisible_char">*</property>
 	      <property name="activates_default">True</property>
 	      <signal name="changed" handler="on_change_password_entry_changed" last_modification_time="Sat, 05 Aug 2006 21:44:33 GMT"/>
 	    </widget>
@@ -1975,11 +1844,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 	      <property name="tooltip" translatable="yes">Enter the name for the new database.</property>
 	      <property name="can_focus">True</property>
 	      <property name="editable">True</property>
-	      <property name="visibility">True</property>
+	      <property name="visibility">False</property>
 	      <property name="max_length">0</property>
 	      <property name="text" translatable="yes"></property>
 	      <property name="has_frame">True</property>
-	      <property name="invisible_char">●</property>
+	      <property name="invisible_char">*</property>
 	      <property name="activates_default">True</property>
 	      <signal name="changed" handler="on_change_password_entry_changed" last_modification_time="Sat, 05 Aug 2006 21:44:46 GMT"/>
 	    </widget>
