@@ -103,7 +103,7 @@ class MysqlManager:
 			c = self.db.cursor()
 			c.execute('flush privileges')
 		except Error, detail:
-			self.show_error(detail[1])
+			self.show_error('Change Password',detail[1])
 		else:
 			self.populate_models()
 			self.xml.get_widget('main_app').set_sensitive(True)
@@ -159,7 +159,7 @@ class MysqlManager:
 			c.execute('grant all privileges on '+db+'.* to "'
 					  +user+'"@"'+host+'" identified by "'+passwd+'"')
 		except Error, detail:
-			self.show_error(detail[1])
+			self.show_error('Add',detail[1])
 		else:
 			self.populate_models()
 			self.xml.get_widget('quick_add_dialog').hide()
@@ -182,7 +182,7 @@ class MysqlManager:
 			c = self.db.cursor()
 			c.execute('create database '+db)
 		except Error, detail:
-			self.show_error(detail[1])
+			self.show_error('Add Database',detail[1])
 		else:
 			self.populate_models()
 			self.xml.get_widget('add_db_dialog').hide()
@@ -192,7 +192,9 @@ class MysqlManager:
 		self.xml.get_widget('error_dialog').hide()
 		return True
 
-	def show_error(self,message):
+	def show_error(self,task,message):
+		self.xml.get_widget('error_title').set_text(
+			'<span size="large"><b>Unable to '+task+'</b></span>')
 		self.xml.get_widget('error_label').set_text(message)
 		self.xml.get_widget('error_dialog').show()
 
@@ -217,7 +219,7 @@ class MysqlManager:
 			c = self.db.cursor()
 			c.execute('drop database '+db[0])
 		except Error, detail:
-			self.show_error(detail[1])
+			self.show_error('Delete Database',detail[1])
 		else:
 			self.populate_models()
 			self.xml.get_widget('delete_db_dialog').hide()
@@ -241,7 +243,7 @@ class MysqlManager:
 			for r in c.fetchall():
 				self.user_model.append(r)
 		except Error, detail:
-			self.show_error(detail[1])
+			self.show_error('Use Database',detail[1])
 		self.on_select_db_row()
 		self.on_select_perm_row()
 		self.on_select_user_row()
@@ -288,12 +290,11 @@ class MysqlManager:
 		try:
 			self.db = MySQLdb.connect(
 				host = host_entry,
-				# Does not work:
 				port = port_spin,
 				user = user_entry,
 				passwd = passwd_entry)
 		except Error, detail:
-			self.show_error(detail[1])
+			self.show_error('Login',detail[1])
 		else:
 			self.populate_models()
 			self.xml.get_widget('server_dialog').hide()
