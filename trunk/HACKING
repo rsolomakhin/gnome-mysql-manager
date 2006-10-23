@@ -1,0 +1,27 @@
+MySQL Manager (a.k.a. gnome-mysql-manager) is written in
+Python programming language. Source code consists of Python source
+code, Glade user interface definition, and various pixmaps. The
+project website is:
+
+     http://code.google.com/p/gnome-mysql-manager
+
+The website contains essential information about the project. The
+project wiki is:
+
+     http://rouslan.stikipad.com/mysql
+
+Wiki contains all of the project documentation, with exception of the
+files including in SVN (INSTALL, README, HACKING, COPYING, etc.)
+
+
+Modifications to this application should be submitted as bug reports:
+
+     http://code.google.com/p/gnome-mysql-manager/issues/list
+
+where they can be reviewed before being submitted. Keep in mind that
+it is  up to project maintainer(s) to decide which patches will be
+accepted. Contributors of multiple accepted patches can become project
+members upon request.
+
+Rouslan Solomakhin
+2006-10-23

@@ -1,0 +1,9 @@
+Create a directory for the application, for example ~/mysql-manager/.
+Copy files mysql-manager.py, mysql-manager.glade, tool.png, and
+tool.svg into the directory. 
+
+To run MySQL Manager, change into the direcotory and run
+`python mysql-manager.py`.
+
+Rouslan Solomakhin
+2006-10-23
