@@ -1,6 +1,6 @@
 ##############################################################################
 #
-# gnome-mysql-manager - Simple tool for manager MySQL database.
+# gnome-mysql-manager - Simple tool for managing MySQL database.
 # Copyright (C) 2006  Rouslan Solomakhin
 #
 #   mysql-manager.py: MySQL database manager GUI.
@@ -20,15 +20,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
 # USA
 #
+# $Id$
+#
 ##############################################################################
 
 
+import os
 import gtk.glade
 import gnome.ui
 import gobject
 import gconf
 import MySQLdb
 from MySQLdb import *
+import mysqlmanagerconfig
 
 
 ##############################################################################
@@ -48,7 +52,9 @@ class MysqlManager:
 	#
 	def __init__(self):
 		gnome.init('mysql-manager','0.1')
-		self.xml = gtk.glade.XML('mysql-manager.glade')
+		self.xml = gtk.glade.XML(os.path.join(
+			mysqlmanagerconfig.GLADEDIR,
+			'mysql-manager.glade'))
 		self.xml.signal_autoconnect(self)
 
 		renderer = gtk.CellRendererText()

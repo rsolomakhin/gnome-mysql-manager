@@ -6,3 +6,20 @@
 	* COPYING: created.
 	* HACKING: created.
 
+2006-10-23  Rouslan Solomakhin  <rouslan solomakhin gmail com>
+
+	* acinclude.m4: created by example of application called
+	'revalation'.
+	* AUTHORS: created.
+	* NEWS: created.
+	* configure.ac: created.
+	* Makefile.am: created.
+	* autogen.sh: created.
+	* mysql-manager/mysqlmanagerconfig.py.in: created. this file
+	contains path to glade and pixmap files.
+	* mysql-manager/gnome-mysql-manager.in: created. this is a shell
+	script to launch the application.
+	* mysql-manager/mysql-manager.glade.in: created from
+	mysql-manager/mysql-manager.glade. all mentions of "tool.png" were
+	replaced with "@icon@".
+
