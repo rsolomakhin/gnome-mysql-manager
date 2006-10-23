@@ -1,6 +1,6 @@
 To install, run the following commands:
 
-./autogen --prefix /some/path
+./autogen.sh --prefix /some/path
 make
 make install
 
