@@ -11,7 +11,10 @@ project wiki is:
      http://rouslan.stikipad.com/mysql
 
 Wiki contains all of the project documentation, with exception of the
-files including in SVN (INSTALL, README, HACKING, COPYING, etc.)
+files included in SVN (INSTALL, README, HACKING, COPYING, and
+ChangeLog). To anonymously checkout source code from the SVN
+repository, run `svn checkout
+http://gnome-mysql-manager.googlecode.com/svn/trunk/ gnome-mysql-manager`
 
 
 Modifications to this application should be submitted as bug reports:
