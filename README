@@ -1,0 +1,45 @@
+                      MySQL Manager - Gnome GUI
+                     ===========================
+
+Simple tool for managing MySQL database. Features include managing
+databases, users, and permissions. The tool is written using pygtk,
+python-gnome, and python-mysqldb.
+
+
+ Why use mysql manager?
+------------------------
+
+I wrote this tool when I was working with Ruby on Rails, and
+Drupal. These require MySQL databases, but constantly creating and
+removing databases and users from command line was, and still is, a
+hustle. This tool is intended for easy management of MySQL databases
+and users, and it does this task well (am I being bias?).
+
+
+ Using mysql manager
+---------------------
+
+Read INSTALL for installation and starting instructions. There is a
+usage tutorial on the project wiki website:
+
+     http://rouslan.stikipad.com/mysql/show/UserManual
+
+
+ Error handling
+----------------
+
+When an error occurs, the user is notified via an error dialog. There
+are no undo, backup, or restore options.
+
+
+ Reporting bugs
+----------------
+
+If you find a bug in MySQL Manager, or would like to suggest
+(implement, maybe?) a feature, please file a bug at:
+
+     http://code.google.com/p/gnome-mysql-manager/issues/list
+
+
+Rouslan Solomakhin
+2006-10-23
