@@ -25,9 +25,9 @@
 #
 ##############################################################################
 
-aclocal
-autoconf
-automake --add-missing
-./configure $@
+aclocal || exit $?
+autoconf || exit $?
+automake --add-missing || exit $?
+./configure $@ || exit $?
 
 ##############################################################################
