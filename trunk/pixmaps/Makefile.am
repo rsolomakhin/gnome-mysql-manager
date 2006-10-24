@@ -20,25 +20,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
 # USA
 #
-# $Id$
+# $Id: Makefile.am 17 2006-10-23 17:17:01Z Rouslan.Solomakhin $
 #
 ##############################################################################
 
-SUBDIRS = mysql-manager pixmaps
+pixmapsdir = $(datadir)/pixmaps/gnome-mysql-manager
+pixmaps_DATA = tool.png
 
-EXTRA_DIST = 		\
-	HACKING		\
-	README
+EXTRA_DIST = $(pixmaps_DATA)
 
-MAINTAINERCLEANFILES = 	\
-	Makefile.in	\
-	autom4te.cache	\
-	config.log	\
-	install-sh	\
-	missing		\
-	mkisntalldirs	\
-	aclocal.m4	\
-	config.guess	\
-	config.status	\
-	config.sub	\
-	configure
+MAINTAINERCLEANFILES = Makefile.in

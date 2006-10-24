@@ -23,10 +23,14 @@ dnl $Id$
 dnl
 
 AC_PREREQ(2.59)
-AC_INIT(mysql-manager/gnome-mysql-manager.in)
-AM_INIT_AUTOMAKE(gnome-mysql-manager, 0.1, [rouslan solomakhin gmail com])
 
-AM_PATH_PYTHON(2.4)
+AC_INIT([MySQL Manager], [0.1])
+AC_CONFIG_SRCDIR(HACKING)
+AC_COPYRIGHT([Copyright (C) 2006 Rouslan Solomakhin])
+
+AM_INIT_AUTOMAKE
+
+AC_PATH_PROG(PYTHON, python)
 
 RVL_PYTHON_MODULE(gtk,     yes)
 RVL_PYTHON_MODULE(gnome,   yes)
@@ -34,6 +38,10 @@ RVL_PYTHON_MODULE(gobject, yes)
 RVL_PYTHON_MODULE(gconf,   yes)
 RVL_PYTHON_MODULE(MySQLdb, yes)
 
-AC_OUTPUT(
+AC_CONFIG_FILES([
 Makefile
-)
+mysql-manager/Makefile
+pixmaps/Makefile
+])
+
+AC_OUTPUT
