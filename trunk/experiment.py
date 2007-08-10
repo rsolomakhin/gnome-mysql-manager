@@ -92,9 +92,21 @@ class MysqlManager:
 			gtk.gdk.threads_leave()
 			return
 		conn.close()
-		view = gtk.TreeView()
+		
+		databases = gtk.TreeStore(str)
+		databases.append(None, ["hello"])
+		databases.append(None, ["good bye"])
+		view = gtk.TreeView(databases)
+		column = gtk.TreeViewColumn("Database")
+		view.append_column(column)
+		cell = gtk.CellRendererText()
+		column.pack_start(cell, True)
+		column.add_attribute(cell, "text", 0)
+		view.set_search_column(0)
+		column.set_sort_column_id(0)
+		
 		self.notebook.prepend_page(view, gtk.Label(title))
-		view.show_all()
+		self.notebook.show_all()
 		self.notebook.set_current_page(0)
 		self.login_widget.set_sensitive(True)
 		self.status.set_text("")
