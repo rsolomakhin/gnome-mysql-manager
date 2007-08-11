@@ -6,12 +6,45 @@ import gtk
 import socket
 import threading
 
-class MysqlManager:
+class MysqlManagerTestConn(threading.Thread):
+	def __init__(self, host, port):
+		threading.Thread.__init__(self)
+		self.host = host
+		self.port = port
+		self.error = None
+
+	def run(self):
+		"""Return None on successful connection.
+		   Return (error_num, error_message) on error."""
+		connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		try:
+			connection.connect((self.host, self.port))
+		except socket.error, error:
+			self.error = error
+		connection.close()
+
+class MysqlManagerSocket:
+	def __init__(self, plug_id):
+		w = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		s = gtk.Socket()
+		w.add(s)
+		s.add_id(plug_id)
+		w.connect("delete_event", self.delete_event)
+		w.connect("destroy", self.destroy)
+		w.show_all()
+
+	def delete_event(self, widget, event):
+		return False
+		
+	def destroy(self, widget):
+		gtk.main_quit()
+
+	def main(self):
+		gtk.main()
+
+class MysqlManagerPlug:
 	def __init__(self):
-		gtk.gdk.threads_init()
-		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		self.window.connect("delete_event", self.delete)
-		self.window.connect("destroy", self.destroy)
+		self.plug = gtk.Plug(0L)
 		self.status = gtk.Label()
 		self.notebook = gtk.Notebook()
 		self.notebook.set_tab_pos(gtk.POS_LEFT)
@@ -19,8 +52,11 @@ class MysqlManager:
 		box = gtk.VBox()
 		box.add(self.notebook)
 		box.add(self.status)
-		self.window.add(box)
-		self.window.show_all()
+		self.plug.add(box)
+		self.plug.show_all()
+
+	def get_id(self):
+		return self.plug.get_id()
 
 	def build_login_widget(self):
 		self.login_widget = gtk.VBox()
@@ -36,9 +72,9 @@ class MysqlManager:
 		self.hostEntry.set_text("localhost")
 		self.userEntry.set_text("root")
 		
-		self.hostEntry.connect("key_release_event", self.update_login_widget)
-		self.userEntry.connect("key_release_event", self.update_login_widget)
-		self.portAdjst.connect("value_changed", self.update_login_widget)
+		self.hostEntry.connect("changed", self.update_login_widget)
+		self.userEntry.connect("changed", self.update_login_widget)
+		self.portSpinr.connect("changed", self.update_login_widget)
 
 		box = gtk.HBox()
 		box.add(gtk.Label("Host:"))
@@ -74,33 +110,34 @@ class MysqlManager:
 		
 		return self.login_widget
 
-	def login_thread(self):
+	def login(self, widget, data=None):
+		self.set_connecting_status(True)
 		host = self.hostEntry.get_text()
 		port = int(self.portAdjst.get_value())
-		user = self.userEntry.get_text()
-		pswd = self.passEntry.get_text()
-		title = user+"@"+host+":"+str(port)
-		# ccheck host and port
-		gtk.gdk.threads_enter()
-		self.test_conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		try:
-			self.test_conn.connect((host, port))
-		except socket.error, (num, message):
-			self.set_connecting_status(False)
-			self.status.set_text(message+".")
+		background = MysqlManagerTestConn(host, port)
+		background.start()
+		background.join()
+		self.set_connecting_status(False)
+		if background.error != None:
+			num = background.error[0]
+			mes = background.error[1]
+			self.status.set_text(mes+".")
 			orange = gtk.gdk.color_parse("#F57900")
 			if num == 111:
 				self.portSpinr.modify_base(gtk.STATE_NORMAL, orange)
 			elif num == -5 or num == -2 or num == 113:
 				self.hostEntry.modify_base(gtk.STATE_NORMAL, orange)
+			elif num == 111:
+				self.portSpinr.modify_base(gtk.STATE_NORMAL, orange)
+				self.hostEntry.modify_base(gtk.STATE_NORMAL, orange)
 			else:
 				print "Error #", num
 				self.portSpinr.modify_base(gtk.STATE_NORMAL, orange)
 				self.hostEntry.modify_base(gtk.STATE_NORMAL, orange)
-			gtk.gdk.threads_leave()
 			return
-		self.test_conn.close()
-		gtk.gdk.threads_leave()
+		user = self.userEntry.get_text()
+		pswd = self.passEntry.get_text()
+		title = user+"@"+host+":"+str(port)
 		
 		databases = gtk.TreeStore(str)
 		databases.append(None, ["hello"])
@@ -117,7 +154,6 @@ class MysqlManager:
 		self.notebook.prepend_page(view, gtk.Label(title))
 		self.notebook.show_all()
 		self.notebook.set_current_page(0)
-		self.set_connecting_status(False)
 		return
 
 	def set_connecting_status(self, is_connecting):
@@ -133,11 +169,6 @@ class MysqlManager:
 		self.conn_thread.stop()
 		self.test_conn.close()
 		self.set_connecting_status(False)		
-
-	def login(self, widget, data=None):
-		self.set_connecting_status(True)
-		self.conn_thread = threading.Thread(target=self.login_thread)
-		self.conn_thread.start()
 
 	def update_login_widget(self, widget, event=None):
 		yellow = gtk.gdk.color_parse("#FCE94F")
@@ -157,17 +188,8 @@ class MysqlManager:
 		self.login_button.set_sensitive(len(errors) == 0)
 		self.status.set_text(errors)
 
-	def main(self):
-		gtk.main()
-	
-	def delete(self, widget, data=None):
-		# ask gtk to emit the "destroy" event
-		return False
-	
-	def destroy(self, widget, data=None):
-		gtk.main_quit()
-
 if __name__ == "__main__":
-	manager = MysqlManager()
-	manager.main()
+	mysql_manager_plug = MysqlManagerPlug()
+	mysql_manager_socket = MysqlManagerSocket(mysql_manager_plug.get_id())
+	mysql_manager_socket.main()
 
