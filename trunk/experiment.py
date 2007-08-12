@@ -3,6 +3,7 @@
 import pygtk
 pygtk.require('2.0')
 import gtk
+import gconf
 import socket
 import threading
 
@@ -14,8 +15,6 @@ class MysqlManagerTestConn(threading.Thread):
 		self.error = None
 
 	def run(self):
-		"""Return None on successful connection.
-		   Return (error_num, error_message) on error."""
 		connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		try:
 			connection.connect((self.host, self.port))
@@ -23,28 +22,26 @@ class MysqlManagerTestConn(threading.Thread):
 			self.error = error
 		connection.close()
 
-class MysqlManagerSocket:
-	def __init__(self, plug_id):
-		w = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		s = gtk.Socket()
-		w.add(s)
-		s.add_id(plug_id)
-		w.connect("delete_event", self.delete_event)
-		w.connect("destroy", self.destroy)
-		w.show_all()
+class MysqlManagerGui:
 
-	def delete_event(self, widget, event):
-		return False
-		
-	def destroy(self, widget):
-		gtk.main_quit()
+	# ui
+	ui_error_color   = gtk.gdk.color_parse("#FCE94F")
+	conn_error_color = gtk.gdk.color_parse("#F57900")
+	no_error_color   = gtk.gdk.color_parse("#FFFFFF")
+	
+	# gconf
+	gconf_path_namespace = "/apps/gnome-mysql-manager"
+	gconf_host           = "/apps/gnome-mysql-manager/host"
+	gconf_port           = "/apps/gnome-mysql-manager/port"
+	gconf_user           = "/apps/gnome-mysql-manager/user"
 
-	def main(self):
-		gtk.main()
-
-class MysqlManagerPlug:
 	def __init__(self):
-		self.plug = gtk.Plug(0L)
+		"Initialize"
+
+		# ui
+		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		window.connect("delete_event", self.delete_event)
+		window.connect("destroy", self.destroy)
 		self.status = gtk.Label()
 		self.notebook = gtk.Notebook()
 		self.notebook.set_tab_pos(gtk.POS_LEFT)
@@ -52,11 +49,58 @@ class MysqlManagerPlug:
 		box = gtk.VBox()
 		box.add(self.notebook)
 		box.add(self.status)
-		self.plug.add(box)
-		self.plug.show_all()
+		window.add(box)
 
-	def get_id(self):
-		return self.plug.get_id()
+		# gconf
+		self.gconf_client = gconf.client_get_default()
+		self.gconf_client.add_dir(self.gconf_path_namespace, gconf.CLIENT_PRELOAD_NONE)
+		self.gconf_client.notify_add(self.gconf_path_namespace, self.gconf_key_changed)
+		self.gconf_client.notify(self.gconf_host)
+		self.gconf_client.notify(self.gconf_port)
+		self.gconf_client.notify(self.gconf_user)
+
+		window.show_all()
+
+	def gconf_key_changed(self, client, connection_id, entry, user_data=None):
+		"Update settings using gconf settings"
+		
+		key_name = entry.get_key()
+		
+		# host
+		if key_name == self.gconf_host:
+			host = self.gconf_client.get_string(self.gconf_host)
+			if host is not None and host != self.hostEntry.get_text():
+				self.hostEntry.set_text(host)
+				
+		# user
+		elif key_name == self.gconf_user:
+			user = self.gconf_client.get_string(self.gconf_user)
+			if user is not None and user != self.userEntry.get_text():
+				self.userEntry.set_text(user)
+				
+		# port
+		if key_name == self.gconf_port:
+			port = self.gconf_client.get_int(self.gconf_port)
+			if port is not None and port != self.portAdjst.get_value():
+				self.portAdjst.set_value(port)
+
+
+	def delete_event(self, widget, event):
+		return False
+		
+	def destroy(self, widget):
+		"Save settings and quit"
+	
+		# gconf
+		self.gconf_client.set_int(self.gconf_port, int(self.portAdjst.get_value()))
+		self.gconf_client.set_string(self.gconf_host, self.hostEntry.get_text())
+		self.gconf_client.set_string(self.gconf_user, self.userEntry.get_text())
+	
+		# quit
+		gtk.main_quit()
+
+	def main(self):
+		gtk.main()
 
 	def build_login_widget(self):
 		self.login_widget = gtk.VBox()
@@ -122,18 +166,17 @@ class MysqlManagerPlug:
 			num = background.error[0]
 			mes = background.error[1]
 			self.status.set_text(mes+".")
-			orange = gtk.gdk.color_parse("#F57900")
 			if num == 111:
-				self.portSpinr.modify_base(gtk.STATE_NORMAL, orange)
+				self.portSpinr.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
 			elif num == -5 or num == -2 or num == 113:
-				self.hostEntry.modify_base(gtk.STATE_NORMAL, orange)
-			elif num == 111:
-				self.portSpinr.modify_base(gtk.STATE_NORMAL, orange)
-				self.hostEntry.modify_base(gtk.STATE_NORMAL, orange)
+				self.hostEntry.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
+			elif num == 110:
+				self.portSpinr.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
+				self.hostEntry.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
 			else:
 				print "Error #", num
-				self.portSpinr.modify_base(gtk.STATE_NORMAL, orange)
-				self.hostEntry.modify_base(gtk.STATE_NORMAL, orange)
+				self.portSpinr.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
+				self.hostEntry.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
 			return
 		user = self.userEntry.get_text()
 		pswd = self.passEntry.get_text()
@@ -171,25 +214,22 @@ class MysqlManagerPlug:
 		self.set_connecting_status(False)		
 
 	def update_login_widget(self, widget, event=None):
-		yellow = gtk.gdk.color_parse("#FCE94F")
-		white = gtk.gdk.color_parse("#FFFFFF")
 		errors = ""
 		if self.hostEntry.get_text() == "":
-			self.hostEntry.modify_base(gtk.STATE_NORMAL, yellow)
+			self.hostEntry.modify_base(gtk.STATE_NORMAL, self.ui_error_color)
 			errors += "Hostname missing. "
 		else:
-			self.hostEntry.modify_base(gtk.STATE_NORMAL, white)
+			self.hostEntry.modify_base(gtk.STATE_NORMAL, self.no_error_color)
 		if self.userEntry.get_text() == "":
-			self.userEntry.modify_base(gtk.STATE_NORMAL, yellow)
+			self.userEntry.modify_base(gtk.STATE_NORMAL, self.ui_error_color)
 			errors += "Username missing. "
 		else:
-			self.userEntry.modify_base(gtk.STATE_NORMAL, white)
-		self.portSpinr.modify_base(gtk.STATE_NORMAL, white)
+			self.userEntry.modify_base(gtk.STATE_NORMAL, self.no_error_color)
+		self.portSpinr.modify_base(gtk.STATE_NORMAL, self.no_error_color)
 		self.login_button.set_sensitive(len(errors) == 0)
 		self.status.set_text(errors)
 
 if __name__ == "__main__":
-	mysql_manager_plug = MysqlManagerPlug()
-	mysql_manager_socket = MysqlManagerSocket(mysql_manager_plug.get_id())
-	mysql_manager_socket.main()
+	mysql_manager_gui = MysqlManagerGui()
+	mysql_manager_gui.main()
 
