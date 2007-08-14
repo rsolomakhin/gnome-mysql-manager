@@ -4,25 +4,37 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import gconf
+import gobject
 import socket
 import threading
 
 class MysqlManagerTestConn(threading.Thread):
-	def __init__(self, host, port):
-		threading.Thread.__init__(self)
+	"Thread for testing connection."
+	def __init__(self, host, port, callback):
+		"Initialize"
+		super(MysqlManagerTestConn, self).__init__()
 		self.host = host
 		self.port = port
-		self.error = None
+		self.callback = callback
+		self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+	def abort(self):
+		"Close the connection and do not invoke the callback function"
+		self.connection.close()
 
 	def run(self):
-		connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		print "RUNNNING CONNECTION TEST"
+		error = None
 		try:
-			connection.connect((self.host, self.port))
-		except socket.error, error:
-			self.error = error
-		connection.close()
+			self.connection.connect((self.host, self.port))
+		except socket.error, socket_error:
+			error = socket_error
+		finally:
+			self.connection.close()
+			self.callback(error)
 
 class MysqlManagerGui:
+	"GNOME MySQL Manager"
 
 	# ui
 	ui_error_color   = gtk.gdk.color_parse("#FCE94F")
@@ -37,7 +49,9 @@ class MysqlManagerGui:
 
 	def __init__(self):
 		"Initialize"
-
+		
+		gobject.threads_init()
+		
 		# ui
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		window.connect("delete_event", self.delete_event)
@@ -62,8 +76,7 @@ class MysqlManagerGui:
 		window.show_all()
 
 	def gconf_key_changed(self, client, connection_id, entry, user_data=None):
-		"Update settings using gconf settings"
-		
+		"Update user interface using gconf settings"
 		key_name = entry.get_key()
 		
 		# host
@@ -83,7 +96,6 @@ class MysqlManagerGui:
 			port = self.gconf_client.get_int(self.gconf_port)
 			if port is not None and port != self.portAdjst.get_value():
 				self.portAdjst.set_value(port)
-
 
 	def delete_event(self, widget, event):
 		return False
@@ -141,9 +153,9 @@ class MysqlManagerGui:
 		self.login_data_box.add(box)
 
 		self.login_button = gtk.Button("Login")
-		self.login_button.connect("clicked", self.login)
+		self.login_button.connect("clicked", self.on_login_button_clicked)
 		self.cancel_button = gtk.Button("Cancel")
-		self.cancel_button.connect("clicked", self.cancel_login)
+		self.cancel_button.connect("clicked", self.on_cancel_button_clicked)
 		self.cancel_button.set_sensitive(False)
 		buttons = gtk.HButtonBox()
 		buttons.add(self.cancel_button)
@@ -154,17 +166,20 @@ class MysqlManagerGui:
 		
 		return self.login_widget
 
-	def login(self, widget, data=None):
+	def on_login_button_clicked(self, widget, data=None):
 		self.set_connecting_status(True)
 		host = self.hostEntry.get_text()
 		port = int(self.portAdjst.get_value())
-		background = MysqlManagerTestConn(host, port)
-		background.start()
-		background.join()
+		self.test_conn = MysqlManagerTestConn(host, port, self.on_test_connection_finish)
+		self.test_conn.start()
+
+	def on_test_connection_finish(self, error):
 		self.set_connecting_status(False)
-		if background.error != None:
-			num = background.error[0]
-			mes = background.error[1]
+		if error is None:
+			self.login()
+		else:
+			num = error[0]
+			mes = error[1]
 			self.status.set_text(mes+".")
 			if num == 111:
 				self.portSpinr.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
@@ -177,7 +192,10 @@ class MysqlManagerGui:
 				print "Error #", num
 				self.portSpinr.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
 				self.hostEntry.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
-			return
+
+	def login(self):
+		host = self.hostEntry.get_text()
+		port = int(self.portAdjst.get_value())
 		user = self.userEntry.get_text()
 		pswd = self.passEntry.get_text()
 		title = user+"@"+host+":"+str(port)
@@ -208,9 +226,8 @@ class MysqlManagerGui:
 		else:
 			self.status.set_text("")
 
-	def cancel_login(self, widget, data=None):
-		self.conn_thread.stop()
-		self.test_conn.close()
+	def on_cancel_button_clicked(self, widget, data=None):
+		self.test_conn.abort()
 		self.set_connecting_status(False)		
 
 	def update_login_widget(self, widget, event=None):
@@ -232,4 +249,3 @@ class MysqlManagerGui:
 if __name__ == "__main__":
 	mysql_manager_gui = MysqlManagerGui()
 	mysql_manager_gui.main()
-
