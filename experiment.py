@@ -11,7 +11,7 @@ import MySQLdb
 class MysqlManagerGui:
 	"GNOME MySQL Manager"
 
-	# ui
+	# colors
 	ui_error_color   = gtk.gdk.color_parse("#FCE94F")
 	conn_error_color = gtk.gdk.color_parse("#F57900")
 	no_error_color   = gtk.gdk.color_parse("#FFFFFF")
@@ -29,6 +29,7 @@ class MysqlManagerGui:
 		
 		# ui
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		window.set_title("GNOME MySQL Manager")
 		window.connect("delete_event", self.delete_event)
 		window.connect("destroy", self.destroy)
 		self.status = gtk.Label()
@@ -52,6 +53,7 @@ class MysqlManagerGui:
 
 	def gconf_key_changed(self, client, connection_id, entry, user_data=None):
 		"Update user interface using gconf settings"
+
 		key_name = entry.get_key()
 		
 		# host
@@ -137,6 +139,7 @@ class MysqlManagerGui:
 		self.login_widget.add(buttons)
 		
 		return self.login_widget
+	
 
 	def on_login_button_clicked(self, widget, data=None):
 		host = self.hostEntry.get_text()
@@ -164,7 +167,8 @@ class MysqlManagerGui:
 	def login(self):
 		"Login to the MySQL server and display all databases"
 
-		databases = gtk.TreeStore(str)
+		databases = gtk.TreeStore(str, str)
+
 		host = self.hostEntry.get_text()
 		port = int(self.portAdjst.get_value())
 		user = self.userEntry.get_text()
@@ -175,53 +179,122 @@ class MysqlManagerGui:
 			server = MySQLdb.connect(host=host, port=port, user=user, passwd=pswd)
 		except MySQLdb.MySQLError, error:
 			self.status.set_text(error[1])
+			self.userEntry.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
+			self.passEntry.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
 			return
+
 		cursor = server.cursor()
+
+		# database are keys
+		db_dict = {}
 		cursor.execute("show databases")
 		row = cursor.fetchone()
 		while row is not None:
-			databases.append(None, [row[0]])
+			db = row[0]
+			if db != "mysql" and db != "information_schema":
+				db_dict[db] = []
 			row = cursor.fetchone()
+
+		# try to open mysql database.
+		# if this succeeds, manage user permissions.
+		# if this fails, view tables.
+		super_user = True
+		try:
+			cursor.execute("use mysql")
+		except MySQLdb.MySQLError:
+			super_user = False
+
+		if super_user:
+			# lists of (host, user) tuples are values
+			for db, users in db_dict.iteritems():
+				cursor.execute("select host,user from db where db=%s", (db,));
+				row = cursor.fetchone()
+				while row is not None:
+					host = row[0]
+					user = row[1]
+					users.append((host, user))
+					row = cursor.fetchone()
+		else:
+			# lists of tables are values
+			for db, tables in db_dict.iteritems():
+				cursor.execute("use "+db)
+				cursor.execute("show tables")
+				row = cursor.fetchone()
+				while row is not None:
+					table = row[0]
+					tables.append(table)
+					row = cursor.fetchone()
+		
 		cursor.close()
 
+		# Populate the treemodel.
+		if super_user:
+	 		for db, users in db_dict.iteritems():
+				parent_row = databases.append(None, [db, None])
+				for host, user in users:
+					databases.append(parent_row, [host, user])
+		else:
+			for db, tables in db_dict.iteritems():
+				parent_row = databases.append(None, [db, None])
+				for table in tables:
+					databases.append(parent_row, [table, None])
+
 		view = gtk.TreeView(databases)
-		column = gtk.TreeViewColumn("Database")
-		view.append_column(column)
-		cell = gtk.CellRendererText()
-		column.pack_start(cell, True)
-		column.add_attribute(cell, "text", 0)
-		view.set_search_column(0)
-		column.set_sort_column_id(0)
 		
-		self.notebook.prepend_page(view, gtk.Label(title))
+		# first column is databases
+		column1 = gtk.TreeViewColumn()
+		view.append_column(column1)
+		renderer1 = gtk.CellRendererText()
+		column1.pack_start(renderer1, True)
+		column1.add_attribute(renderer1, "text", 0)
+		column1.set_sort_column_id(0)
+
+		if super_user:
+			# second column is users
+			column2 = gtk.TreeViewColumn()
+			view.append_column(column2)
+			renderer2 = gtk.CellRendererText()
+			column2.pack_start(renderer2, True)
+			column2.add_attribute(renderer2, "text", 1)
+			column2.set_sort_column_id(0)
+		
+		view.set_search_column(0)
+
+		scrolled_window = gtk.ScrolledWindow()
+		scrolled_window.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+		scrolled_window.add(view)
+		self.notebook.prepend_page(scrolled_window, gtk.Label(title))
 		self.notebook.show_all()
 		self.notebook.set_current_page(0)
 		return
 
-	#def set_connecting_status(self, is_connecting):
-	#	self.login_data_box.set_sensitive(not is_connecting)
-	#	self.login_button.set_sensitive(not is_connecting)
-	#	if is_connecting:
-	#		self.status.set_text("Connecting...")
-	#	else:
-	#		self.status.set_text("")
-
 	def update_login_widget(self, widget, event=None):
+		"Color widgets depending on user input"
+
 		errors = ""
-		if self.hostEntry.get_text() == "":
+		host = self.hostEntry.get_text()
+
+		self.portSpinr.modify_base(gtk.STATE_NORMAL, self.no_error_color)
+		self.passEntry.modify_base(gtk.STATE_NORMAL, self.no_error_color)
+
+		# Color the host entry if it is empty.
+		if host == "":
 			self.hostEntry.modify_base(gtk.STATE_NORMAL, self.ui_error_color)
 			errors += "Hostname missing. "
 		else:
 			self.hostEntry.modify_base(gtk.STATE_NORMAL, self.no_error_color)
+
+		# Color the user entry if it is empty.
 		if self.userEntry.get_text() == "":
 			self.userEntry.modify_base(gtk.STATE_NORMAL, self.ui_error_color)
 			errors += "Username missing. "
 		else:
 			self.userEntry.modify_base(gtk.STATE_NORMAL, self.no_error_color)
-		self.portSpinr.modify_base(gtk.STATE_NORMAL, self.no_error_color)
-		self.login_button.set_sensitive(len(errors) == 0)
-		self.status.set_text(errors)
 
+
+		self.status.set_text(errors)
+		self.login_button.set_sensitive(len(errors) == 0)
+		
 if __name__ == "__main__":
 	mysql_manager_gui = MysqlManagerGui()
 	mysql_manager_gui.main()
