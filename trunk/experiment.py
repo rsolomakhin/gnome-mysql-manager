@@ -164,6 +164,7 @@ class MysqlManagerGui:
 			self.portSpinr.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
 			self.hostEntry.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
 
+	# TODO: this function is too long. refactor it.
 	def login(self):
 		"Login to the MySQL server and display all databases"
 
@@ -189,7 +190,7 @@ class MysqlManagerGui:
 
 		cursor = server.cursor()
 
-		# database are keys
+		# databases are keys
 		db_dict = {}
 		cursor.execute("show databases")
 		row = cursor.fetchone()
