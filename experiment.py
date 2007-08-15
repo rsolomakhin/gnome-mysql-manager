@@ -8,31 +8,6 @@ import gobject
 import socket
 import threading
 
-class MysqlManagerTestConn(threading.Thread):
-	"Thread for testing connection."
-	def __init__(self, host, port, callback):
-		"Initialize"
-		super(MysqlManagerTestConn, self).__init__()
-		self.host = host
-		self.port = port
-		self.callback = callback
-		self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-	def abort(self):
-		"Close the connection and do not invoke the callback function"
-		self.connection.close()
-
-	def run(self):
-		print "RUNNNING CONNECTION TEST"
-		error = None
-		try:
-			self.connection.connect((self.host, self.port))
-		except socket.error, socket_error:
-			error = socket_error
-		finally:
-			self.connection.close()
-			self.callback(error)
-
 class MysqlManagerGui:
 	"GNOME MySQL Manager"
 
@@ -154,11 +129,7 @@ class MysqlManagerGui:
 
 		self.login_button = gtk.Button("Login")
 		self.login_button.connect("clicked", self.on_login_button_clicked)
-		self.cancel_button = gtk.Button("Cancel")
-		self.cancel_button.connect("clicked", self.on_cancel_button_clicked)
-		self.cancel_button.set_sensitive(False)
 		buttons = gtk.HButtonBox()
-		buttons.add(self.cancel_button)
 		buttons.add(self.login_button)
 		
 		self.login_widget.add(self.login_data_box)
@@ -170,28 +141,26 @@ class MysqlManagerGui:
 		self.set_connecting_status(True)
 		host = self.hostEntry.get_text()
 		port = int(self.portAdjst.get_value())
-		self.test_conn = MysqlManagerTestConn(host, port, self.on_test_connection_finish)
-		self.test_conn.start()
-
-	def on_test_connection_finish(self, error):
+		self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.connection.settimeout(1)
+		connection_error = None
+		try:
+			self.connection.connect((host, port))
+		except socket.error, error:
+			connection_error = error
+		finally:
+			self.connection.close()
 		self.set_connecting_status(False)
-		if error is None:
+		if connection_error is None:
 			self.login()
 		else:
-			num = error[0]
-			mes = error[1]
-			self.status.set_text(mes+".")
-			if num == 111:
-				self.portSpinr.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
-			elif num == -5 or num == -2 or num == 113:
-				self.hostEntry.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
-			elif num == 110:
-				self.portSpinr.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
-				self.hostEntry.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
-			else:
-				print "Error #", num
-				self.portSpinr.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
-				self.hostEntry.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
+			try:
+				error_message = connection_error[len(connection_error)-1]
+			except TypeError: # TypeError="Object 'timeout' has no len()"
+				error_message = 'Timed out'
+			self.status.set_text(error_message+".")
+			self.portSpinr.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
+			self.hostEntry.modify_base(gtk.STATE_NORMAL, self.conn_error_color)
 
 	def login(self):
 		host = self.hostEntry.get_text()
@@ -220,15 +189,10 @@ class MysqlManagerGui:
 	def set_connecting_status(self, is_connecting):
 		self.login_data_box.set_sensitive(not is_connecting)
 		self.login_button.set_sensitive(not is_connecting)
-		self.cancel_button.set_sensitive(is_connecting)
 		if is_connecting:
 			self.status.set_text("Connecting...")
 		else:
 			self.status.set_text("")
-
-	def on_cancel_button_clicked(self, widget, data=None):
-		self.test_conn.abort()
-		self.set_connecting_status(False)		
 
 	def update_login_widget(self, widget, event=None):
 		errors = ""
