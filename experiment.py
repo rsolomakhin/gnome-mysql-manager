@@ -167,7 +167,11 @@ class MysqlManagerGui:
 	def login(self):
 		"Login to the MySQL server and display all databases"
 
-		databases = gtk.TreeStore(str, str)
+		databases = gtk.TreeStore(str, str, gtk.gdk.Pixbuf)
+
+		db_pixbuf = gtk.gdk.pixbuf_new_from_file("pixmaps/db.png")
+		user_pixbuf = gtk.gdk.pixbuf_new_from_file("pixmaps/user.png")
+		table_pixbuf = gtk.gdk.pixbuf_new_from_file("pixmaps/table.png")
 
 		host = self.hostEntry.get_text()
 		port = int(self.portAdjst.get_value())
@@ -230,35 +234,43 @@ class MysqlManagerGui:
 		# Populate the treemodel.
 		if super_user:
 	 		for db, users in db_dict.iteritems():
-				parent_row = databases.append(None, [db, None])
+				parent_row = databases.append(None, [db, None, db_pixbuf])
 				for host, user in users:
-					databases.append(parent_row, [host, user])
+					databases.append(parent_row, [user, host, user_pixbuf])
 		else:
 			for db, tables in db_dict.iteritems():
-				parent_row = databases.append(None, [db, None])
+				parent_row = databases.append(None, [db, None, db_pixbuf])
 				for table in tables:
-					databases.append(parent_row, [table, None])
+					databases.append(parent_row, [table, None, table_pixbuf])
 
-		view = gtk.TreeView(databases)
+		view = gtk.TreeView()
 		
-		# first column is databases
-		column1 = gtk.TreeViewColumn()
-		view.append_column(column1)
-		renderer1 = gtk.CellRendererText()
-		column1.pack_start(renderer1, True)
-		column1.add_attribute(renderer1, "text", 0)
-		column1.set_sort_column_id(0)
+		# first column is pixbuf
+		renderer_pix = gtk.CellRendererPixbuf()
+		column_pix = gtk.TreeViewColumn()
+		column_pix.pack_start(renderer_pix, True)
+		column_pix.add_attribute(renderer_pix, "pixbuf", 2)
+		view.append_column(column_pix)
+		
+		# second column is databases->{users|tables}
+		renderer_db = gtk.CellRendererText()
+		column_db = gtk.TreeViewColumn()
+		column_db.pack_start(renderer_db, True)
+		column_db.add_attribute(renderer_db, "text", 0)
+		column_db.set_sort_column_id(0)
+		view.append_column(column_db)
 
 		if super_user:
-			# second column is users
-			column2 = gtk.TreeViewColumn()
-			view.append_column(column2)
-			renderer2 = gtk.CellRendererText()
-			column2.pack_start(renderer2, True)
-			column2.add_attribute(renderer2, "text", 1)
-			column2.set_sort_column_id(0)
+			# second column is hostnames
+			renderer_host = gtk.CellRendererText()
+			column_host = gtk.TreeViewColumn()
+			column_host.pack_start(renderer_host, True)
+			column_host.add_attribute(renderer_host, "text", 1)
+			column_host.set_sort_column_id(0)
+			view.append_column(column_host)
 		
 		view.set_search_column(0)
+		view.set_model(databases)
 
 		scrolled_window = gtk.ScrolledWindow()
 		scrolled_window.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
